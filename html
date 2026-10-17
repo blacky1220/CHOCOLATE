@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Danni • Un rincón para ti</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fuentes tipográficas artesanales: Editorial + Caligrafía Real -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tone.js para la cajita de música acústica -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        :root {
+            --book-width: 350px;
+            --book-height: 480px;
+            --paper-bg: #fdfaf3;
+            --leather-dark: #1f1416;
+            --gold-leaf: #d4af37;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --book-width: 88vw;
+                --book-height: 440px;
+            }
+        }
+
+        @media (max-height: 820px) {
+            :root {
+                --book-height: 420px;
+            }
+        }
+
+        @media (max-height: 720px) {
+            :root {
+                --book-height: 380px;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #1a0b1c;
+        }
+
+        /* Tipografías humanas y editoriales */
+        .font-handwriting {
+            font-family: 'Caveat', cursive;
+        }
+        .font-serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+        .font-serif-book {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Cielo de atardecer cinematográfico y pictórico (cálido, suave, no estridente) */
+        .sunset-sky {
+            background: linear-gradient(180deg, 
+                #180b1f 0%, 
+                #31142a 18%, 
+                #581e35 38%, 
+                #8c2d3a 58%, 
+                #c95834 78%, 
+                #ea9443 100%);
+            background-size: 100% 140%;
+            animation: skyBreath 22s ease-in-out infinite alternate;
+        }
+
+        @keyframes skyBreath {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 0% 25%; }
+        }
+
+        /* Sol crepuscular con halo de difusión cinematográfica */
+        .sun-warm {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #fffbee 0%, #fed7aa 32%, #f97316 70%, rgba(249, 115, 22, 0) 100%);
+            border-radius: 50%;
+            filter: drop-shadow(0 0 50px rgba(251, 146, 60, 0.85)) drop-shadow(0 0 100px rgba(234, 88, 12, 0.45));
+            animation: sunWarmth 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes sunWarmth {
+            0% { transform: translate(-50%, 0) scale(0.97); opacity: 0.92; }
+            100% { transform: translate(-50%, -6px) scale(1.04); opacity: 1; }
+        }
+
+        /* Rayos crepusculares sutiles tipo grabado antiguo */
+        .god-rays-subtle {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            width: 140vmax;
+            height: 140vmax;
+            transform: translate(-50%, -50%);
+            background: repeating-conic-gradient(
+                from 0deg,
+                rgba(254, 215, 170, 0.07) 0deg 7deg,
+                transparent 7deg 18deg,
+                rgba(251, 146, 60, 0.05) 18deg 26deg,
+                transparent 26deg 36deg
+            );
+            mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.25) 45%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.25) 45%, transparent 70%);
+            animation: rotateSlowRays 140s linear infinite;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes rotateSlowRays {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Silueta de aves */
+        .bird-path {
+            animation: flyPeacefully 55s linear infinite;
+        }
+        @keyframes flyPeacefully {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(65vw) translateY(-14px); }
+            100% { transform: translateX(130vw) translateY(5px); }
+        }
+
+        /* Escena y Libro 3D Artesanal */
+        .scene-3d {
+            perspective: 1800px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .book-wrapper {
+            position: relative;
+            width: var(--book-width);
+            height: var(--book-height);
+            transform-style: preserve-3d;
+            transition: transform 1.1s cubic-bezier(0.35, 0.1, 0.25, 1);
+        }
+
+        @media (min-width: 769px) {
+            .book-wrapper.is-open {
+                transform: translateX(calc(var(--book-width) * 0.5)) rotateX(6deg);
+            }
+            .book-wrapper.is-closed {
+                transform: rotateX(10deg) rotateY(-10deg);
+            }
+            .book-wrapper.is-closed:hover {
+                transform: rotateX(6deg) rotateY(-4deg) translateY(-4px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .book-wrapper.is-open {
+                transform: translateX(0) rotateX(2deg);
+            }
+            .book-wrapper.is-closed {
+                transform: rotateX(8deg) rotateY(-4deg);
+            }
+        }
+
+        .book-front-wing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            transition: transform 1.25s cubic-bezier(0.45, 0.05, 0.2, 1);
+            z-index: 30;
+            cursor: pointer;
+        }
+
+        @media (min-width: 769px) {
+            .book-wrapper.is-open .book-front-wing {
+                transform: rotateY(-176deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .book-wrapper.is-open .book-front-wing {
+                transform: rotateY(-170deg);
+                pointer-events: none;
+                opacity: 0.1;
+            }
+        }
+
+        .wing-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 6px 16px 16px 6px;
+        }
+
+        /* Portada exterior: Encuadernación en tela de lino oscuro / cuero fino con estampado dorado */
+        .cover-outer {
+            background: 
+                radial-gradient(circle at 40% 30%, rgba(217, 119, 6, 0.12) 0%, transparent 60%),
+                linear-gradient(135deg, #2b1419 0%, #1c0c11 50%, #120609 100%);
+            border: 2px solid #a67c30;
+            box-shadow: 
+                inset 0 0 40px rgba(0,0,0,0.85),
+                0 22px 50px rgba(0,0,0,0.65),
+                5px 5px 0px #e2cfb0,
+                8px 8px 0px #c2ac88,
+                12px 14px 24px rgba(0,0,0,0.55);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px 24px;
+        }
+
+        /* Marcapáginas de cinta de satén borgoña que cuelga del lomo */
+        .satin-ribbon {
+            position: absolute;
+            top: -12px;
+            right: 48px;
+            width: 22px;
+            height: calc(100% + 28px);
+            background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #6b1515 100%);
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.35);
+            border-radius: 2px 2px 0 0;
+            z-index: 35;
+            pointer-events: none;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 10px), 0 100%);
+        }
+
+        /* Estampado dorado letterpress en la portada */
+        .foil-gold {
+            color: #f7e3af;
+            text-shadow: 
+                0 1px 1px rgba(0,0,0,0.8),
+                0 0 1px rgba(254, 240, 138, 0.4);
+            letter-spacing: 0.22em;
+        }
+
+        /* Marco de foto en la portada: Paspartú de museo vintage */
+        .cover-art-frame {
+            width: 154px;
+            height: 195px;
+            background: #170a0f;
+            border-radius: 8px;
+            padding: 7px;
+            box-shadow: 
+                inset 0 2px 6px rgba(0,0,0,0.8),
+                0 6px 18px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(212, 175, 55, 0.45);
+        }
+
+        .cover-art-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            background: #240f16;
+        }
+
+        /* Página interior izquierda: Álbum de fotos estilo Polaroid con notas a lápiz */
+        .cover-inner-left {
+            transform: rotateY(180deg);
+            background: linear-gradient(90deg, #e4d1b1 0%, #fcf7ed 10%, #fffefb 100%);
+            border-radius: 16px 6px 6px 16px;
+            border: 1px solid #d5c09a;
+            border-left: 6px solid #220b12;
+            box-shadow: 
+                inset -14px 0 26px rgba(110, 75, 30, 0.15),
+                -12px 18px 40px rgba(0,0,0,0.45);
+            padding: 24px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Página derecha: Hoja de libro de autor con textura de papel de algodón */
+        .book-right-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #d8bf98 0%, #fbf5e7 7%, #fffefb 20%, #faf3e2 100%);
+            border-radius: 6px 16px 16px 6px;
+            border: 1px solid #d5c09a;
+            border-right: 6px solid #220b12;
+            box-shadow: 
+                inset 14px 0 24px rgba(110, 75, 30, 0.16),
+                5px 5px 0px #e2cfb0,
+                12px 18px 40px rgba(0, 0, 0, 0.5);
+            padding: 28px 24px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Tarjeta Polaroid vintage auténtica */
+        .polaroid-authentic {
+            background: #ffffff;
+            padding: 9px 9px 24px 9px;
+            border-radius: 3px;
+            box-shadow: 
+                0 10px 24px rgba(45, 18, 10, 0.22),
+                0 2px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ede1d0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.3s ease;
+        }
+
+        .polaroid-authentic:hover {
+            transform: rotate(0deg) scale(1.02) !important;
+            box-shadow: 0 16px 32px rgba(45, 18, 10, 0.28);
+        }
+
+        /* Cinta adhesiva masking tape realista */
+        .masking-tape {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 72px;
+            height: 19px;
+            background: rgba(245, 230, 195, 0.72);
+            border-left: 2px dashed rgba(200, 180, 140, 0.6);
+            border-right: 2px dashed rgba(200, 180, 140, 0.6);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            z-index: 15;
+            pointer-events: none;
+            backdrop-filter: blur(1px);
+        }
+
+        /* Máquina de escribir con trazo natural */
+        .typewriter-cursor::after {
+            content: '•';
+            display: inline-block;
+            color: #9f2b3b;
+            font-size: 1.2em;
+            animation: pulseCursor 1s infinite;
+            margin-left: 3px;
+        }
+
+        @keyframes pulseCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Botón de apertura artesanal */
+        .artisan-btn {
+            background: linear-gradient(135deg, #7c2d37 0%, #581e28 100%);
+            border: 1px solid rgba(254, 215, 170, 0.4);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35), 0 0 14px rgba(249, 115, 22, 0.2);
+            transition: all 0.25s ease;
+        }
+        .artisan-btn:hover {
+            background: linear-gradient(135deg, #8c3541 0%, #682430 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 0 20px rgba(249, 115, 22, 0.35);
+            transform: translateY(-2px);
+        }
+
+        /* Fila de girasoles con z-index detrás del libro */
+        main {
+            z-index: 35 !important;
+        }
+        #sideSunflowerFrame, #sunflowerGarden, #backgroundSunflowerHorizon {
+            z-index: 10 !important;
+        }
+
+        .sunflower-stem {
+            transform-origin: bottom center;
+            animation: swayGentle 6.5s ease-in-out infinite alternate;
+        }
+        .sway-delay-1 { animation-delay: -1s; animation-duration: 6.8s; }
+        .sway-delay-2 { animation-delay: -2.8s; animation-duration: 5.6s; }
+        .sway-delay-3 { animation-delay: -4.2s; animation-duration: 6.2s; }
+        .sway-delay-4 { animation-delay: -1.8s; animation-duration: 7.2s; }
+        .sway-delay-5 { animation-delay: -5s; animation-duration: 5.9s; }
+
+        @keyframes swayGentle {
+            0% { transform: rotate(-3deg); }
+            50% { transform: rotate(1deg); }
+            100% { transform: rotate(3.5deg); }
+        }
+
+        .sunflower-wrapper {
+            transform-origin: bottom center;
+            transition: filter 0.3s ease, transform 0.4s ease;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .sunflower-wrapper:hover {
+            filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6));
+        }
+    </style>
+</head>
+<body class="sunset-sky w-screen h-screen relative flex flex-col justify-between items-center overflow-hidden">
+
+    <!-- Capa de grano fotográfico analógico (elimina la apariencia sintética de IA) -->
+    <svg class="pointer-events-none fixed inset-0 w-full h-full opacity-[0.038] mix-blend-overlay z-50">
+        <filter id="filmGrain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#filmGrain)"/>
+    </svg>
+
+    <!-- Lienzo de ambiente para luciérnagas y pétalos en la brisa -->
+    <canvas id="ambientCanvas" class="absolute inset-0 pointer-events-none z-20"></canvas>
+
+    <!-- Barra Superior: Discreta, editorial y sin adornos artificiales -->
+    <header class="w-full max-w-5xl px-4 sm:px-6 pt-4 flex justify-between items-center z-40">
+        <div class="flex items-center gap-2 text-stone-200/90 text-xs sm:text-sm tracking-widest uppercase font-serif-title">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-300"></span>
+            <span id="recipientBadge" class="font-medium">Para Danni</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Cajita de Música acústica -->
+            <button id="musicBtn" onclick="toggleMusic()" class="flex items-center gap-2 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md text-amber-100/90 px-3.5 py-1.5 rounded-full border border-amber-300/30 text-xs transition shadow-sm" title="Activar cajita de música">
+                <span id="musicIcon" class="text-xs">♪</span>
+                <span id="musicLabel" class="font-clean text-[11px] tracking-wide">Cajita de música</span>
+            </button>
+
+            <!-- Lluvia suave de pétalos -->
+            <button onclick="spawnLoveBurst()" class="w-7 h-7 flex items-center justify-center bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md text-amber-200 rounded-full border border-amber-300/30 text-xs transition shadow-sm" title="Viento entre las flores">
+                <span>🌻</span>
+            </button>
+
+            <!-- Botón discreto para personalizar cartas o fotos -->
+            <button onclick="openCustomizeModal()" class="flex items-center gap-1.5 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md text-stone-300 hover:text-amber-100 px-3 py-1.5 rounded-full border border-stone-600/40 text-xs transition shadow-sm" title="Personalizar dedicatoria y fotos">
+                <span class="text-[11px]">✏️</span>
+                <span class="hidden sm:inline font-clean text-[11px]">Editar notas</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Fondo de Paisaje: Sol, aves y colinas lejanas -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Rayos crepusculares sutiles -->
+        <div class="god-rays-subtle"></div>
+
+        <!-- Sol poniente -->
+        <div class="sun-warm absolute top-14 sm:top-16 left-1/2 -translate-x-1/2"></div>
+        <div class="absolute top-24 left-1/2 -translate-x-1/2 w-[460px] h-[220px] bg-amber-500/15 blur-3xl rounded-full"></div>
+
+        <!-- Aves lejanas cruzando el cielo -->
+        <svg class="bird-path absolute top-[20%] left-[-15%] w-32 opacity-40 pointer-events-none" viewBox="0 0 160 50" fill="none" stroke="rgba(50, 10, 25, 0.75)" stroke-width="1.8" stroke-linecap="round">
+            <path d="M10,25 Q18,16 26,23 Q34,16 42,25" />
+            <path d="M48,15 Q55,8 62,14 Q69,8 76,15" />
+            <path d="M80,30 Q86,23 92,29 Q98,23 104,30" />
+        </svg>
+
+        <!-- Colinas crepusculares -->
+        <svg class="absolute bottom-0 w-full h-32 sm:h-44" viewBox="0 0 1440 320" preserveAspectRatio="none">
+            <path fill="rgba(42, 10, 26, 0.6)" d="M0,192L80,186.7C160,181,320,171,480,181.3C640,192,800,224,960,218.7C1120,213,1280,171,1360,149.3L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+            <path fill="rgba(24, 6, 17, 0.88)" d="M0,240L60,234.7C120,229,240,219,360,224C480,229,600,251,720,250.7C840,251,960,229,1080,218.7C1200,208,1320,208,1380,208L1440,208L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+        </svg>
+
+        <!-- Horizonte lejano de girasoles -->
+        <div id="backgroundSunflowerHorizon" class="absolute bottom-12 left-0 w-full h-24 flex justify-around items-end px-2 opacity-65 pointer-events-none z-10"></div>
+    </div>
+
+    <!-- Girasoles laterales discretos -->
+    <div id="sideSunflowerFrame" class="fixed inset-x-0 bottom-0 h-64 sm:h-80 pointer-events-none z-10 flex justify-between items-end px-1 sm:px-4 overflow-hidden"></div>
+
+    <!-- ÁREA CENTRAL: LIBRO DE RECUERDOS Y DEDICATORIA -->
+    <main class="relative z-35 flex-1 flex flex-col justify-center items-center w-full px-4 my-auto">
+        
+        <div class="scene-3d">
+            <div id="bookWrapper" class="book-wrapper is-closed">
+
+                <!-- Tapa delantera abatible -->
+                <div id="bookFrontWing" class="book-front-wing" onclick="handleCoverClick()">
+                    
+                    <!-- CARA EXTERIOR: PORTADA DEL LIBRO EN ENCUADERNACIÓN CLÁSICA -->
+                    <div class="wing-face cover-outer">
+                        <!-- Cinta de lectura que cuelga -->
+                        <div class="satin-ribbon"></div>
+
+                        <!-- Detalle superior sutil -->
+                        <div class="w-full flex justify-between items-center text-[10px] text-amber-200/50 uppercase tracking-[0.25em] font-serif-book">
+                            <span>✦</span>
+                            <span>Cuaderno personal</span>
+                            <span>✦</span>
+                        </div>
+
+                        <!-- Marco con retrato o ilustración artística -->
+                        <div class="flex flex-col items-center text-center my-auto">
+                            <div class="cover-art-frame mb-3.5 group cursor-pointer" onclick="openCustomizeModal('photos')" title="Cambiar la imagen de portada">
+                                <div class="cover-art-inner">
+                                    <img id="coverMainImage" src="" alt="Portada" class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-amber-200/10 pointer-events-none"></div>
+                                </div>
+                            </div>
+
+                            <p class="foil-gold text-xs font-semibold uppercase mb-1">Para</p>
+                            <h1 id="coverTitle" class="font-serif-title italic text-2xl sm:text-3xl text-amber-100 font-normal leading-tight">
+                                Danni
+                            </h1>
+                            <div class="w-16 h-[1px] bg-gradient-to-r from-transparent via-amber-300/40 to-transparent my-2"></div>
+                            <p id="coverSubtitle" class="font-serif-book italic text-stone-300/80 text-xs sm:text-sm">
+                                Un pequeño rincón solo para ti
+                            </p>
+
+                            <!-- Indicador elegante para abrir -->
+                            <div class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900/50 border border-amber-300/30 text-amber-200/90 text-[11px] font-clean tracking-wider">
+                                <span>Toca para abrir</span>
+                                <span class="text-xs">→</span>
+                            </div>
+                        </div>
+
+                        <!-- Pie de portada -->
+                        <div class="w-full text-center text-[10px] text-stone-400/50 tracking-widest font-clean">
+                            OCTUBRE 2026
+                        </div>
+                    </div>
+
+                    <!-- CARA INTERIOR IZQUIERDA: ÁLBUM POLAROID -->
+                    <div class="wing-face cover-inner-left" onclick="event.stopPropagation()">
+                        <div class="flex justify-between items-center border-b border-stone-800/15 pb-2">
+                            <span class="font-serif-book italic text-xs text-stone-700 font-semibold tracking-wide">Recuerdos & Fotografías</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="cyclePolaroid(-1, event)" class="w-5 h-5 rounded-full bg-stone-800/10 hover:bg-stone-800/20 text-stone-700 text-xs flex items-center justify-center transition" title="Foto anterior">‹</button>
+                                <span id="polaroidCounter" class="text-[11px] text-stone-600 font-mono">1/3</span>
+                                <button onclick="cyclePolaroid(1, event)" class="w-5 h-5 rounded-full bg-stone-800/10 hover:bg-stone-800/20 text-stone-700 text-xs flex items-center justify-center transition" title="Siguiente foto">›</button>
+                            </div>
+                        </div>
+
+                        <!-- Marco Polaroid vintage -->
+                        <div class="my-auto flex flex-col items-center text-center px-1 pt-2">
+                            <div id="polaroidCard" class="polaroid-authentic w-52 sm:w-56 transform -rotate-1 cursor-pointer relative" onclick="cyclePolaroid(1, event)" title="Toca para cambiar de foto">
+                                <div class="masking-tape"></div>
+
+                                <div class="w-full h-44 sm:h-48 overflow-hidden rounded-[2px] bg-stone-100 relative">
+                                    <img id="leftPolaroidImage" src="" alt="Recuerdo" class="w-full h-full object-cover object-top transition-all duration-500">
+                                </div>
+
+                                <p id="polaroidCaption" class="font-handwriting text-xl sm:text-2xl text-stone-800 mt-2.5 leading-snug">
+                                    Esa sonrisa tan tuya ✨
+                                </p>
+                            </div>
+
+                            <!-- Nota a lápiz debajo de la foto -->
+                            <p id="leftPageQuote" class="font-serif-book italic text-stone-700/80 text-xs sm:text-sm leading-snug mt-3 px-1 text-center">
+                                «A veces no hace falta una fecha especial, solo tener ganas de recordarle a alguien lo mucho que importa.»
+                            </p>
+                        </div>
+
+                        <div class="flex justify-between items-center border-t border-stone-800/15 pt-2 text-xs text-stone-500">
+                            <button onclick="closeBook(event)" class="hover:text-stone-800 transition text-[11px] font-clean">
+                                ← Cerrar
+                            </button>
+                            <button onclick="openCustomizeModal('photos')" class="text-stone-700 hover:text-stone-900 font-medium transition text-[11px] flex items-center gap-1 font-clean">
+                                <span>Subir foto real</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PÁGINA DERECHA: TEXTO ESCRITO A MANO / DEDICATORIA -->
+                <div class="book-right-page">
+                    <!-- Encabezado de página -->
+                    <div class="flex justify-between items-center border-b border-stone-800/15 pb-2">
+                        <span id="chapterNumber" class="font-serif-book italic text-xs text-stone-600">
+                            Nota 1 de 4
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="closeBook(event)" class="md:hidden text-xs text-stone-600 hover:underline">
+                                Cerrar ✕
+                            </button>
+                            <span class="text-amber-800/50 text-xs tracking-widest font-serif-book">✦</span>
+                        </div>
+                    </div>
+
+                    <!-- Mini polaroid en móvil -->
+                    <div class="md:hidden flex items-center gap-3 bg-stone-200/50 border border-stone-300 rounded-lg p-2 mt-2 shadow-xs cursor-pointer" onclick="cyclePolaroid(1, event)">
+                        <img id="mobilePolaroidThumb" src="" alt="Mini Foto" class="w-11 h-13 object-cover object-top rounded border border-white shadow-xs">
+                        <div class="flex-1 text-left">
+                            <span class="text-[9px] uppercase tracking-wider text-stone-600 font-medium font-clean">Foto en el álbum (toca para cambiar)</span>
+                            <p id="mobilePolaroidCaption" class="font-handwriting text-base text-stone-800 leading-tight">Esa sonrisa tan tuya</p>
+                        </div>
+                    </div>
+
+                    <!-- Contenido de la carta -->
+                    <div class="my-auto py-2 px-1 flex flex-col justify-center overflow-y-auto max-h-[280px]">
+                        <h2 id="pageHeading" class="font-serif-title italic text-2xl sm:text-3xl text-stone-900 mb-2.5 font-normal">
+                            Hola, Danni
+                        </h2>
+
+                        <!-- Texto máquina de escribir con tono natural y humano -->
+                        <p id="typewriterText" class="font-serif-book text-stone-800 text-base sm:text-lg leading-relaxed italic typewriter-cursor min-h-[130px]"></p>
+
+                        <!-- Firma personal -->
+                        <div id="pageSignature" class="mt-3 text-right font-handwriting text-2xl text-stone-800 opacity-0 transition-opacity duration-700">
+                            Con todo mi cariño, siempre.
+                        </div>
+                    </div>
+
+                    <!-- Controles de navegación de páginas -->
+                    <div class="flex justify-between items-center border-t border-stone-800/15 pt-2.5">
+                        <button id="prevPageBtn" onclick="changePage(-1)" class="px-3 py-1 rounded-full bg-stone-800/5 hover:bg-stone-800/15 text-stone-800 text-xs font-clean transition disabled:opacity-20 disabled:pointer-events-none flex items-center gap-1">
+                            <span>←</span>
+                            <span>Anterior</span>
+                        </button>
+
+                        <div id="pageDots" class="flex items-center gap-1.5"></div>
+
+                        <button id="nextPageBtn" onclick="changePage(1)" class="px-3.5 py-1 rounded-full bg-stone-900 hover:bg-stone-800 text-amber-100 text-xs font-clean transition flex items-center gap-1 shadow-sm">
+                            <span id="nextBtnText">Siguiente</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Botón sobrio para abrir o cerrar el cuaderno -->
+        <div class="mt-5 z-30 flex items-center gap-3">
+            <button id="toggleBookBtn" onclick="toggleBookState()" class="artisan-btn text-amber-100 px-6 py-2 rounded-full text-xs sm:text-sm font-clean tracking-wider flex items-center gap-2">
+                <span id="toggleBookIcon">📖</span>
+                <span id="toggleBookText">Abrir cuaderno</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Jardín de girasoles botánicos en el fondo (en forma de arco suave) -->
+    <div id="sunflowerGarden" class="fixed bottom-0 left-0 w-full h-36 sm:h-44 pointer-events-none z-10 flex justify-between items-end overflow-visible px-1"></div>
+
+    <!-- Modal elegante para editar fotos y cartas -->
+    <div id="customizeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-[#faf6ee] border border-amber-900/30 rounded-xl max-w-xl w-full p-5 sm:p-6 shadow-2xl text-stone-900 max-h-[90vh] overflow-y-auto font-clean">
+            <div class="flex justify-between items-center border-b border-stone-300 pb-3 mb-4">
+                <div>
+                    <h3 class="font-serif-title italic text-2xl text-stone-900">
+                        Personalizar el cuaderno
+                    </h3>
+                    <p class="text-xs text-stone-500 font-serif-book">Escribe tus propias palabras o coloca tus fotos reales</p>
+                </div>
+                <button onclick="closeCustomizeModal()" class="text-stone-500 hover:text-stone-800 text-xl font-bold px-2">✕</button>
+            </div>
+
+            <!-- Sección de Fotos -->
+            <div id="photoUploadSection" class="bg-white/80 border border-stone-200 rounded-lg p-3.5 mb-5 shadow-xs">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h4 class="font-semibold text-stone-800 text-xs uppercase tracking-wider">
+                        Fotografías del álbum
+                    </h4>
+                    <span class="text-[10px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded font-mono">Se guardan en tu navegador</span>
+                </div>
+                <p class="text-xs text-stone-600 mb-3 font-serif-book">
+                    Sube las fotos reales de Danni desde tu dispositivo para que aparezcan en los marcos Polaroid:
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- Foto 1 (Portada y Álbum 3) -->
+                    <div class="bg-stone-50 p-2.5 rounded border border-stone-200 flex flex-col items-center text-center">
+                        <div class="w-16 h-20 rounded overflow-hidden border border-stone-300 mb-2 bg-stone-100">
+                            <img id="previewImg2" src="" alt="Portada" class="w-full h-full object-cover">
+                        </div>
+                        <span class="text-[11px] font-medium text-stone-700 mb-1">1. Foto de portada</span>
+                        <label class="cursor-pointer bg-stone-800 hover:bg-stone-700 text-white text-[11px] px-2.5 py-1 rounded transition w-full">
+                            Elegir foto
+                            <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(2, this)">
+                        </label>
+                        <input id="inputCaption2" type="text" class="mt-1.5 w-full text-[11px] px-1.5 py-1 rounded border border-stone-200 text-center font-handwriting text-sm" placeholder="Nota a mano...">
+                    </div>
+
+                    <!-- Foto 2 (Polaroid 1) -->
+                    <div class="bg-stone-50 p-2.5 rounded border border-stone-200 flex flex-col items-center text-center">
+                        <div class="w-16 h-20 rounded overflow-hidden border border-stone-300 mb-2 bg-stone-100">
+                            <img id="previewImg0" src="" alt="Polaroid 1" class="w-full h-full object-cover object-top">
+                        </div>
+                        <span class="text-[11px] font-medium text-stone-700 mb-1">2. Primera foto</span>
+                        <label class="cursor-pointer bg-stone-800 hover:bg-stone-700 text-white text-[11px] px-2.5 py-1 rounded transition w-full">
+                            Elegir foto
+                            <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(0, this)">
+                        </label>
+                        <input id="inputCaption0" type="text" class="mt-1.5 w-full text-[11px] px-1.5 py-1 rounded border border-stone-200 text-center font-handwriting text-sm" placeholder="Nota a mano...">
+                    </div>
+
+                    <!-- Foto 3 (Polaroid 2) -->
+                    <div class="bg-stone-50 p-2.5 rounded border border-stone-200 flex flex-col items-center text-center">
+                        <div class="w-16 h-20 rounded overflow-hidden border border-stone-300 mb-2 bg-stone-100">
+                            <img id="previewImg1" src="" alt="Polaroid 2" class="w-full h-full object-cover object-top">
+                        </div>
+                        <span class="text-[11px] font-medium text-stone-700 mb-1">3. Segunda foto</span>
+                        <label class="cursor-pointer bg-stone-800 hover:bg-stone-700 text-white text-[11px] px-2.5 py-1 rounded transition w-full">
+                            Elegir foto
+                            <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(1, this)">
+                        </label>
+                        <input id="inputCaption1" type="text" class="mt-1.5 w-full text-[11px] px-1.5 py-1 rounded border border-stone-200 text-center font-handwriting text-sm" placeholder="Nota a mano...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos de texto -->
+            <div class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Nombre en la portada:</label>
+                    <input id="inputRecipient" type="text" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white focus:outline-none focus:border-stone-600">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Subtítulo de portada:</label>
+                    <input id="inputCoverTitle" type="text" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white focus:outline-none focus:border-stone-600">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Nota 1 (La razón de esto):</label>
+                    <textarea id="inputPage1" rows="3" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white font-serif-book text-sm leading-relaxed focus:outline-none focus:border-stone-600"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Nota 2 (Detalles suyos):</label>
+                    <textarea id="inputPage2" rows="3" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white font-serif-book text-sm leading-relaxed focus:outline-none focus:border-stone-600"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Nota 3 (Un momento para los dos):</label>
+                    <textarea id="inputPage3" rows="3" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white font-serif-book text-sm leading-relaxed focus:outline-none focus:border-stone-600"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Nota 4 (Agradecimiento sincero):</label>
+                    <textarea id="inputPage4" rows="3" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white font-serif-book text-sm leading-relaxed focus:outline-none focus:border-stone-600"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-stone-700 mb-1">Tu firma al pie:</label>
+                    <input id="inputSignature" type="text" class="w-full px-3 py-1.5 rounded border border-stone-300 bg-white font-handwriting text-base focus:outline-none focus:border-stone-600">
+                </div>
+            </div>
+
+            <div class="mt-5 flex justify-end gap-2.5 border-t border-stone-200 pt-3">
+                <button onclick="closeCustomizeModal()" class="px-4 py-1.5 rounded bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs transition">
+                    Cancelar
+                </button>
+                <button onclick="saveCustomDedication()" class="px-5 py-1.5 rounded bg-stone-900 hover:bg-stone-800 text-amber-100 text-xs font-medium transition shadow-sm">
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================
+           1. ILUSTRACIONES ARTÍSTICAS EN ACUARELA / FOTOGRÁFICAS
+              (Reemplazan a los dibujos esquemáticos por una estética cálida y de libro de arte)
+           ========================================================== */
+        // Ilustración 1: Silueta poética al atardecer en tonos terracota y ámbar
+        const artSunsetVignette1 = `data:image/svg+xml;utf8,` + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+                <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4a1525"/>
+                        <stop offset="45%" stop-color="#8c2f39"/>
+                        <stop offset="80%" stop-color="#d96c37"/>
+                        <stop offset="100%" stop-color="#f5b058"/>
+                    </linearGradient>
+                </defs>
+                <rect width="400" height="500" fill="url(#g1)"/>
+                <!-- Sol velado -->
+                <circle cx="200" cy="270" r="75" fill="#fef3c7" opacity="0.85"/>
+                <!-- Suaves capas de colinas y campo de girasoles -->
+                <path d="M0,340 Q120,320 230,345 Q320,360 400,335 L400,500 L0,500 Z" fill="#2d0f19"/>
+                <path d="M0,385 Q160,365 300,385 Q360,395 400,380 L400,500 L0,500 Z" fill="#1b080f"/>
+                <!-- Girasoles en silueta delicada -->
+                <circle cx="80" cy="370" r="18" fill="#f59e0b"/>
+                <circle cx="80" cy="370" r="8" fill="#451a03"/>
+                <path d="M80,378 L78,440" stroke="#14532d" stroke-width="4"/>
+                <circle cx="310" cy="365" r="22" fill="#fbbf24"/>
+                <circle cx="310" cy="365" r="9" fill="#451a03"/>
+                <path d="M310,374 L312,450" stroke="#14532d" stroke-width="4"/>
+                <circle cx="190" cy="385" r="16" fill="#f59e0b"/>
+                <circle cx="190" cy="385" r="7" fill="#451a03"/>
+                <!-- Destello cálido -->
+                <circle cx="200" cy="270" r="140" fill="#fef3c7" opacity="0.12"/>
+            </svg>
+        `);
+
+        // Ilustración 2: Ramillete botánico de flores silvestres y girasol prensado
+        const artBotanicalPress = `data:image/svg+xml;utf8,` + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+                <rect width="400" height="500" fill="#fcf7ee"/>
+                <!-- Textura de papel antiguo -->
+                <rect x="20" y="20" width="360" height="460" fill="none" stroke="#e8d8be" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <!-- Tallo y hojas botánicas -->
+                <path d="M200,430 C195,330 205,220 200,140" stroke="#4d533c" stroke-width="5" fill="none" stroke-linecap="round"/>
+                <path d="M198,310 C160,285 130,295 120,320 C140,335 175,330 198,315" fill="#586345" opacity="0.85"/>
+                <path d="M202,250 C240,225 270,235 280,260 C260,275 225,270 202,255" fill="#586345" opacity="0.85"/>
+                <!-- Pétalos de girasol prensado -->
+                <g transform="translate(200, 140)">
+                    <ellipse cx="0" cy="-45" rx="11" ry="38" fill="#d97706" opacity="0.85"/>
+                    <ellipse cx="32" cy="-32" rx="11" ry="38" transform="rotate(45)" fill="#f59e0b" opacity="0.85"/>
+                    <ellipse cx="45" cy="0" rx="11" ry="38" transform="rotate(90)" fill="#d97706" opacity="0.85"/>
+                    <ellipse cx="32" cy="32" rx="11" ry="38" transform="rotate(135)" fill="#fbbf24" opacity="0.85"/>
+                    <ellipse cx="0" cy="45" rx="11" ry="38" fill="#d97706" opacity="0.85"/>
+                    <ellipse cx="-32" cy="32" rx="11" ry="38" transform="rotate(225)" fill="#f59e0b" opacity="0.85"/>
+                    <ellipse cx="-45" cy="0" rx="11" ry="38" transform="rotate(270)" fill="#d97706" opacity="0.85"/>
+                    <ellipse cx="-32" cy="-32" rx="11" ry="38" transform="rotate(315)" fill="#fbbf24" opacity="0.85"/>
+                    <!-- Corazón de semillas secas -->
+                    <circle cx="0" cy="0" r="26" fill="#381c14"/>
+                    <circle cx="0" cy="0" r="22" fill="#542e1b"/>
+                    <circle cx="0" cy="0" r="8" fill="#783f23"/>
+                </g>
+                <text x="200" y="465" font-family="serif" font-style="italic" font-size="14" fill="#8c775d" text-anchor="middle">Helianthus annuus • Flores para Danni</text>
+            </svg>
+        `);
+
+        // Ilustración 3: Composición de luz dorada y recuerdos
+        const artGoldenMemory = `data:image/svg+xml;utf8,` + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+                <defs>
+                    <radialGradient id="sunBloom" cx="50%" cy="40%" r="65%">
+                        <stop offset="0%" stop-color="#fffbeb"/>
+                        <stop offset="30%" stop-color="#fde68a"/>
+                        <stop offset="70%" stop-color="#f59e0b"/>
+                        <stop offset="100%" stop-color="#78350f"/>
+                    </radialGradient>
+                </defs>
+                <rect width="400" height="500" fill="url(#sunBloom)"/>
+                <circle cx="200" cy="200" r="110" fill="#fffef0" opacity="0.45" filter="blur(10px)"/>
+                <path d="M50,420 Q200,370 350,420 L350,500 L50,500 Z" fill="#291206"/>
+                <text x="200" y="460" font-family="sans-serif" font-size="13" letter-spacing="3" fill="#fde68a" text-anchor="middle">UN ATARDECER CONTIGO</text>
+            </svg>
+        `);
+
+        let photoGallery = [
+            {
+                fileCandidate: "WhatsApp Image 2026-10-08 at 23.57.08.jpeg",
+                src: artBotanicalPress,
+                caption: "Esa sonrisa tan tuya ✨",
+                rotation: "-1.5deg"
+            },
+            {
+                fileCandidate: "WhatsApp Image 2026-10-07 at 13.03.45 (1).jpg",
+                src: artGoldenMemory,
+                caption: "Tu manera tan única de ser ❤️",
+                rotation: "1.8deg"
+            },
+            {
+                fileCandidate: "watermarked_img_9890192318333619520.jpg",
+                src: artSunsetVignette1,
+                caption: "Nuestro ratito entre girasoles 🌻",
+                rotation: "-1deg"
+            }
+        ];
+
+        let currentPolaroidIndex = 0;
+
+        /* ==========================================================
+           2. TEXTOS REALES, HONESTOS Y HUMANOS (CERO CLICHÉS DE IA)
+           ========================================================== */
+        let bookData = {
+            recipient: "Danni",
+            coverTitle: "Danni",
+            coverSubtitle: "Un pequeño rincón solo para ti",
+            signature: "Con todo mi cariño, siempre.",
+            pages: [
+                {
+                    chapterLabel: "Nota 1 de 4",
+                    leftQuote: "«A veces no hace falta una fecha especial, solo tener ganas de recordarle a alguien lo mucho que importa.»",
+                    heading: "Hola, Danni",
+                    text: "Quería hacerte algo distinto. No un mensaje más que se pierda entre las conversaciones de WhatsApp, sino un pequeño espacio solo para ti. Para esos días en que todo va muy rápido, cuando estés cansada o cuando simplemente quieras desconectar un ratito y sonreír."
+                },
+                {
+                    chapterLabel: "Nota 2 de 4",
+                    leftQuote: "«Tienes esa forma tan tuya de iluminar cualquier lugar sin hacer ruido.»",
+                    heading: "Cosas que me gustan de ti",
+                    text: "Me gusta cómo se te achinan los ojos cuando te ríes de verdad, esa mezcla tan única entre ternura y carácter que tienes, y la paz que transmites cuando hablas de las cosas que te apasionan. Tienes una luz muy tuya, Danni, y es imposible no notar lo bonita que es."
+                },
+                {
+                    chapterLabel: "Nota 3 de 4",
+                    leftQuote: "«La mejor compañía es aquella con la que el silencio nunca resulta incómodo.»",
+                    heading: "Un atardecer tranquilo",
+                    text: "Si tuviera que elegir un plan perfecto contigo, sería uno sencillo: ver caer la tarde sin mirar el reloj, tomarnos algo rico y platicar de cualquier tontería o de la vida entera. Contigo las cosas simples se sienten especiales, y eso no se encuentra todos los días."
+                },
+                {
+                    chapterLabel: "Nota 4 de 4",
+                    leftQuote: "«Hay personas que hacen el mundo un poquito más cálido con solo existir.»",
+                    heading: "Quédate con esto",
+                    text: "Solo quería recordarte lo mucho que vales y lo afortunado que me siento de tenerte cerca. No cambies nunca esa esencia tan linda que tienes. Gracias por tu tiempo, por tus risas y por ser tú. Ojalá este pequeño detalle te recuerde siempre lo especial que eres para mí."
+                }
+            ]
+        };
+
+        let isBookOpen = false;
+        let currentPageIndex = 0;
+        let typewriterTimer = null;
+
+        /* ==========================================================
+           3. INICIALIZACIÓN DE FOTOS
+           ========================================================== */
+        function initPhotosAndStorage() {
+            try {
+                const savedPhotos = localStorage.getItem('danni_book_photos_v2');
+                if (savedPhotos) {
+                    const parsed = JSON.parse(savedPhotos);
+                    if (Array.isArray(parsed) && parsed.length === 3) {
+                        photoGallery = parsed;
+                    }
+                } else {
+                    photoGallery.forEach((item, idx) => {
+                        const testImg = new Image();
+                        testImg.onload = () => {
+                            photoGallery[idx].src = item.fileCandidate;
+                            updatePhotoDisplays();
+                        };
+                        testImg.src = item.fileCandidate;
+                    });
+                }
+
+                const savedBook = localStorage.getItem('danni_book_data_v2');
+                if (savedBook) {
+                    const parsedBook = JSON.parse(savedBook);
+                    bookData = Object.assign(bookData, parsedBook);
+                }
+            } catch (e) {
+                console.warn(e);
+            }
+            updatePhotoDisplays();
+        }
+
+        function updatePhotoDisplays() {
+            const coverImg = document.getElementById('coverMainImage');
+            if (coverImg) coverImg.src = photoGallery[2].src;
+
+            const activePhoto = photoGallery[currentPolaroidIndex];
+            const leftPolaroid = document.getElementById('leftPolaroidImage');
+            const captionEl = document.getElementById('polaroidCaption');
+            const counterEl = document.getElementById('polaroidCounter');
+            const cardEl = document.getElementById('polaroidCard');
+
+            if (leftPolaroid) leftPolaroid.src = activePhoto.src;
+            if (captionEl) captionEl.textContent = activePhoto.caption;
+            if (counterEl) counterEl.textContent = `${currentPolaroidIndex + 1}/3`;
+            if (cardEl) cardEl.style.transform = `rotate(${activePhoto.rotation || '-1deg'})`;
+
+            const mobileThumb = document.getElementById('mobilePolaroidThumb');
+            const mobileCap = document.getElementById('mobilePolaroidCaption');
+            if (mobileThumb) mobileThumb.src = activePhoto.src;
+            if (mobileCap) mobileCap.textContent = activePhoto.caption;
+
+            for (let i = 0; i < 3; i++) {
+                const prev = document.getElementById(`previewImg${i}`);
+                if (prev) prev.src = photoGallery[i].src;
+            }
+
+            document.getElementById('recipientBadge').textContent = `Para ${bookData.recipient}`;
+            document.getElementById('coverTitle').textContent = bookData.coverTitle;
+            document.getElementById('coverSubtitle').textContent = bookData.coverSubtitle;
+        }
+
+        function cyclePolaroid(direction, event) {
+            if (event) event.stopPropagation();
+            currentPolaroidIndex = (currentPolaroidIndex + direction + photoGallery.length) % photoGallery.length;
+            updatePhotoDisplays();
+            playSoftChime();
+        }
+
+        function handlePhotoUpload(slotIndex, inputElement) {
+            const file = inputElement.files && inputElement.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoGallery[slotIndex].src = e.target.result;
+                currentPolaroidIndex = slotIndex;
+                updatePhotoDisplays();
+                try {
+                    localStorage.setItem('danni_book_photos_v2', JSON.stringify(photoGallery));
+                } catch (err) {}
+                spawnLoveBurst(12);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /* ==========================================================
+           4. CONTROL DEL LIBRO 3D
+           ========================================================== */
+        function handleCoverClick() {
+            if (!isBookOpen) openBook();
+        }
+
+        function toggleBookState() {
+            if (isBookOpen) closeBook();
+            else openBook();
+        }
+
+        function openBook() {
+            isBookOpen = true;
+            const wrapper = document.getElementById('bookWrapper');
+            wrapper.classList.remove('is-closed');
+            wrapper.classList.add('is-open');
+
+            document.getElementById('toggleBookIcon').textContent = '📕';
+            document.getElementById('toggleBookText').textContent = 'Cerrar cuaderno';
+
+            playPageTurnSound();
+            spawnLoveBurst(14);
+
+            setTimeout(() => {
+                renderPage(currentPageIndex);
+            }, 450);
+        }
+
+        function closeBook(event) {
+            if (event) event.stopPropagation();
+            isBookOpen = false;
+            const wrapper = document.getElementById('bookWrapper');
+            wrapper.classList.remove('is-open');
+            wrapper.classList.add('is-closed');
+
+            document.getElementById('toggleBookIcon').textContent = '📖';
+            document.getElementById('toggleBookText').textContent = 'Abrir cuaderno';
+
+            if (typewriterTimer) clearInterval(typewriterTimer);
+            playPageTurnSound();
+        }
+
+        function changePage(direction) {
+            const nextIndex = currentPageIndex + direction;
+            if (nextIndex < 0) return;
+
+            if (nextIndex >= bookData.pages.length) {
+                spawnLoveBurst(30);
+                playSoftChime();
+                return;
+            }
+
+            currentPageIndex = nextIndex;
+            playPageTurnSound();
+            spawnLoveBurst(8);
+            renderPage(currentPageIndex);
+        }
+
+        function renderPage(index) {
+            const page = bookData.pages[index];
+            const total = bookData.pages.length;
+
+            currentPolaroidIndex = index % photoGallery.length;
+            updatePhotoDisplays();
+
+            document.getElementById('leftPageQuote').textContent = page.leftQuote;
+            document.getElementById('chapterNumber').textContent = page.chapterLabel;
+            document.getElementById('pageHeading').textContent = page.heading;
+
+            document.getElementById('prevPageBtn').disabled = (index === 0);
+            const nextBtnText = document.getElementById('nextBtnText');
+            if (index === total - 1) {
+                nextBtnText.textContent = "Con cariño ❤️";
+            } else {
+                nextBtnText.textContent = "Siguiente";
+            }
+
+            const dotsContainer = document.getElementById('pageDots');
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < total; i++) {
+                const dot = document.createElement('button');
+                dot.className = `w-2 h-2 rounded-full transition-all ${
+                    i === index ? 'bg-stone-900 w-4' : 'bg-stone-400/40 hover:bg-stone-400/70'
+                }`;
+                dot.onclick = () => {
+                    currentPageIndex = i;
+                    renderPage(i);
+                };
+                dotsContainer.appendChild(dot);
+            }
+
+            const textEl = document.getElementById('typewriterText');
+            const signatureEl = document.getElementById('pageSignature');
+            signatureEl.textContent = bookData.signature;
+            signatureEl.classList.remove('opacity-100');
+            signatureEl.classList.add('opacity-0');
+
+            if (typewriterTimer) clearInterval(typewriterTimer);
+            textEl.textContent = '';
+            textEl.classList.add('typewriter-cursor');
+
+            let charIndex = 0;
+            const fullText = page.text;
+
+            typewriterTimer = setInterval(() => {
+                if (charIndex < fullText.length) {
+                    textEl.textContent += fullText.charAt(charIndex);
+                    charIndex++;
+                } else {
+                    clearInterval(typewriterTimer);
+                    textEl.classList.remove('typewriter-cursor');
+                    signatureEl.classList.remove('opacity-0');
+                    signatureEl.classList.add('opacity-100');
+                }
+            }, 26);
+        }
+
+        /* ==========================================================
+           5. CAJITA DE MÚSICA ACÚSTICA CON TONE.JS (MELODÍA NOSTÁLGICA)
+           ========================================================== */
+        let isMusicPlaying = false;
+        let musicBoxSynth = null;
+        let musicPattern = null;
+
+        async function toggleMusic() {
+            try {
+                await Tone.start();
+
+                if (!musicBoxSynth) {
+                    // Sintetizador calibrado para sonar idéntico a una cajita de música antigua de manivela
+                    musicBoxSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: "triangle" },
+                        envelope: {
+                            attack: 0.005,
+                            decay: 1.6,
+                            sustain: 0.02,
+                            release: 1.9
+                        }
+                    }).toDestination();
+                    musicBoxSynth.volume.value = -13;
+
+                    // Melodía tipo vals de cajita de música (dulce, lenta, humana)
+                    const melodyNotes = [
+                        { time: "0:0", note: "E5" },
+                        { time: "0:1", note: "G5" },
+                        { time: "0:2", note: "B5" },
+                        { time: "1:0", note: "A5" },
+                        { time: "1:1.5", note: "G5" },
+                        { time: "2:0", note: "F#5" },
+                        { time: "2:1", note: "D5" },
+                        { time: "2:2", note: "A5" },
+                        { time: "3:0", note: "G5" },
+                        { time: "3:2", note: "D5" },
+
+                        { time: "4:0", note: "E5" },
+                        { time: "4:1", note: "G5" },
+                        { time: "4:2", note: "C6" },
+                        { time: "5:0", note: "B5" },
+                        { time: "5:1.5", note: "A5" },
+                        { time: "6:0", note: "G5" },
+                        { time: "6:1", note: "F#5" },
+                        { time: "6:2", note: "D5" },
+                        { time: "7:0", note: "E5" }
+                    ];
+
+                    musicPattern = new Tone.Part((time, value) => {
+                        musicBoxSynth.triggerAttackRelease(value.note, "8n", time);
+                    }, melodyNotes);
+                    musicPattern.loop = true;
+                    musicPattern.loopEnd = "8m";
+                }
+
+                if (isMusicPlaying) {
+                    Tone.Transport.stop();
+                    musicPattern.stop();
+                    isMusicPlaying = false;
+                    document.getElementById('musicIcon').textContent = '♪';
+                    document.getElementById('musicLabel').textContent = 'Cajita de música';
+                } else {
+                    Tone.Transport.bpm.value = 68;
+                    musicPattern.start(0);
+                    Tone.Transport.start();
+                    isMusicPlaying = true;
+                    document.getElementById('musicIcon').textContent = '🔊';
+                    document.getElementById('musicLabel').textContent = 'Sonando suave';
+                }
+            } catch (e) {
+                console.error("Audio:", e);
+            }
+        }
+
+        function playPageTurnSound() {
+            if (!musicBoxSynth || !isMusicPlaying) return;
+            try {
+                musicBoxSynth.triggerAttackRelease("B5", "16n");
+            } catch (e) {}
+        }
+
+        function playSoftChime() {
+            if (!musicBoxSynth || !isMusicPlaying) return;
+            try {
+                musicBoxSynth.triggerAttackRelease(["E5", "G5"], "16n");
+            } catch (e) {}
+        }
+
+        /* ==========================================================
+           6. JARDÍN DE GIRASOLES BOTÁNICOS (ARMONÍA NATURAL)
+           ========================================================== */
+        const FIBONACCI_SEEDS = (() => {
+            const seeds = [];
+            const goldenAngle = 137.507764 * (Math.PI / 180);
+            const totalSeeds = 80;
+            for (let i = 1; i <= totalSeeds; i++) {
+                const r = 2.45 * Math.sqrt(i);
+                const theta = i * goldenAngle;
+                const cx = (100 + r * Math.cos(theta)).toFixed(1);
+                const cy = (95 + r * Math.sin(theta)).toFixed(1);
+                const radius = (i > 58 ? 1.5 : i > 28 ? 1.2 : 0.9).toFixed(2);
+                const fill = i > 60 ? '#f59e0b' : (i % 3 === 0 ? '#b45309' : '#78350f');
+                seeds.push(`<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${fill}" />`);
+            }
+            return seeds.join('');
+        })();
+
+        function createBotanicalSunflowerSVG(uid, config) {
+            const { scale, delay, tilt, isBackground = false } = config;
+
+            const backPetals = Array.from({ length: 22 }, (_, i) => {
+                const angle = (i * 16.3) + 7;
+                return `<path d="M100,95 C91,68 92,36 100,15 C108,36 109,68 100,95 Z" fill="#b45309" opacity="0.9" transform="rotate(${angle} 100 95)"/>`;
+            }).join('');
+
+            const midPetals = Array.from({ length: 22 }, (_, i) => {
+                const angle = (i * 16.3) + 3;
+                return `<path d="M100,95 C89,67 91,38 100,19 C109,38 111,67 100,95 Z" fill="#d97706" opacity="0.95" transform="rotate(${angle} 100 95)"/>`;
+            }).join('');
+
+            const frontPetals = Array.from({ length: 22 }, (_, i) => {
+                const angle = i * 16.3;
+                return `<path d="M100,95 C91,70 93,43 100,24 C107,43 109,70 100,95 Z" fill="#f59e0b" transform="rotate(${angle} 100 95)"/>`;
+            }).join('');
+
+            const sizeClasses = isBackground ? "w-14 sm:w-18 h-24 sm:h-28" : "w-24 sm:w-32 h-40 sm:h-52";
+
+            return `
+                <div class="sunflower-wrapper flex flex-col items-center select-none"
+                     style="transform: scale(${scale}) rotate(${tilt}deg);"
+                     onclick="triggerSunflowerBloom(this, event)"
+                     title="Girasol para Danni">
+                    <div class="sunflower-stem ${delay}">
+                        <svg viewBox="0 0 200 310" class="${sizeClasses} overflow-visible drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
+                            <!-- Tallo -->
+                            <path d="M100,98 C94,165 105,235 98,310" stroke="#15803d" stroke-width="10" fill="none" stroke-linecap="round"/>
+                            <!-- Hoja izquierda -->
+                            <path d="M97,192 C68,168 30,175 18,205 C32,232 72,236 98,210 Z" fill="#166534" stroke="#14532d" stroke-width="1.2"/>
+                            <!-- Hoja derecha -->
+                            <path d="M102,226 C132,202 170,208 182,238 C168,265 128,268 101,244 Z" fill="#166534" stroke="#14532d" stroke-width="1.2"/>
+                            <!-- Flor con heliotropismo -->
+                            <g class="sunflower-heliotrope" style="transform-origin: 100px 95px; transition: transform 0.3s ease-out;">
+                                <g>${backPetals}</g>
+                                <g>${midPetals}</g>
+                                <g>${frontPetals}</g>
+                                <circle cx="100" cy="95" r="28" fill="#381c14" stroke="#291206" stroke-width="2"/>
+                                <g>${FIBONACCI_SEEDS}</g>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildSunflowerGarden() {
+            // Jardín en arco suave (bajo en el centro para dar protagonismo al libro)
+            const garden = document.getElementById('sunflowerGarden');
+            const foregroundConfigs = [
+                { scale: 0.95, delay: 'sway-delay-1', tilt: -5 },
+                { scale: 0.80, delay: 'sway-delay-3', tilt: -3 },
+                { scale: 0.62, delay: 'sway-delay-2', tilt: -2 },
+                { scale: 0.44, delay: 'sway-delay-5', tilt: 1 },
+                { scale: 0.36, delay: 'sway-delay-4', tilt: -1 },
+                { scale: 0.32, delay: 'sway-delay-1', tilt: 0 },
+                { scale: 0.36, delay: 'sway-delay-3', tilt: 1 },
+                { scale: 0.44, delay: 'sway-delay-2', tilt: -1 },
+                { scale: 0.62, delay: 'sway-delay-5', tilt: 2 },
+                { scale: 0.80, delay: 'sway-delay-4', tilt: 3 },
+                { scale: 0.95, delay: 'sway-delay-1', tilt: 5 }
+            ];
+            garden.innerHTML = foregroundConfigs.map((c, i) => createBotanicalSunflowerSVG(`fg-${i}`, c)).join('');
+
+            // Laterales
+            const sideFrame = document.getElementById('sideSunflowerFrame');
+            if (sideFrame) {
+                const leftCluster = `
+                    <div class="flex items-end -space-x-8 -ml-4">
+                        ${createBotanicalSunflowerSVG('side-l1', { scale: 1.05, delay: 'sway-delay-2', tilt: -4 })}
+                        ${createBotanicalSunflowerSVG('side-l2', { scale: 0.85, delay: 'sway-delay-4', tilt: 4 })}
+                    </div>
+                `;
+                const rightCluster = `
+                    <div class="flex items-end -space-x-8 -mr-4">
+                        ${createBotanicalSunflowerSVG('side-r1', { scale: 0.85, delay: 'sway-delay-3', tilt: -4 })}
+                        ${createBotanicalSunflowerSVG('side-r2', { scale: 1.05, delay: 'sway-delay-5', tilt: 4 })}
+                    </div>
+                `;
+                sideFrame.innerHTML = leftCluster + rightCluster;
+            }
+
+            // Horizonte lejano
+            const bgHorizon = document.getElementById('backgroundSunflowerHorizon');
+            if (bgHorizon) {
+                const bgConfigs = Array.from({ length: 12 }, (_, i) => ({
+                    scale: 0.45 + (i % 3) * 0.1,
+                    delay: `sway-delay-${(i % 5) + 1}`,
+                    tilt: (i % 2 === 0 ? 1 : -1) * (2 + (i % 3)),
+                    isBackground: true
+                }));
+                bgHorizon.innerHTML = bgConfigs.map((c, i) => createBotanicalSunflowerSVG(`bg-${i}`, c)).join('');
+            }
+        }
+
+        function triggerSunflowerBloom(wrapperEl, event) {
+            if (event) event.stopPropagation();
+            const rect = wrapperEl.getBoundingClientRect();
+            spawnSunflowerPollenBurst(rect.left + rect.width / 2, rect.top + rect.height / 3, 16);
+            playSoftChime();
+        }
+
+        function setupHeliotropism() {
+            const updateTilt = (clientX, clientY) => {
+                const normX = (clientX / window.innerWidth) - 0.5;
+                const angle = normX * 14;
+                const heads = document.querySelectorAll('.sunflower-heliotrope');
+                heads.forEach((head) => {
+                    head.style.transform = `rotate(${angle.toFixed(1)}deg)`;
+                });
+            };
+
+            window.addEventListener('mousemove', (e) => updateTilt(e.clientX, e.clientY), { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches && e.touches[0]) updateTilt(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+        }
+
+        /* ==========================================================
+           7. SISTEMA DE PARTÍCULAS ORGÁNICAS (LUCIÉRNAGAS Y PÉTALOS)
+           ========================================================== */
+        const canvas = document.getElementById('ambientCanvas');
+        const ctx = canvas.getContext('2d');
+        let fireflies = [];
+        let floatingLove = [];
+        let driftingPetals = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for (let i = 0; i < 35; i++) {
+            fireflies.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 2 + 1,
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: -Math.random() * 0.35 - 0.1,
+                alpha: Math.random(),
+                deltaAlpha: Math.random() * 0.015 + 0.005,
+                hue: Math.random() > 0.4 ? 42 : 30
+            });
+        }
+
+        for (let i = 0; i < 16; i++) {
+            driftingPetals.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: Math.random() * 0.5 + 0.2,
+                vy: Math.random() * 0.35 + 0.15,
+                size: Math.random() * 6 + 6,
+                angle: Math.random() * Math.PI * 2,
+                vAngle: (Math.random() - 0.5) * 0.02,
+                flipPhase: Math.random() * Math.PI * 2,
+                vFlip: Math.random() * 0.03 + 0.01,
+                swayPhase: Math.random() * Math.PI * 2
+            });
+        }
+
+        function spawnSunflowerPollenBurst(originX, originY, count = 16) {
+            const symbols = ['✦', '•', '✨', '🌻'];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 2.8 + 1;
+                floatingLove.push({
+                    x: originX,
+                    y: originY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.2,
+                    size: Math.random() * 8 + 8,
+                    alpha: 1,
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.04,
+                    symbol: symbols[Math.floor(Math.random() * symbols.length)]
+                });
+            }
+        }
+
+        function spawnLoveBurst(count = 18) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const symbols = ['🌻', '💛', '✦', '🍂'];
+            for (let i = 0; i < count; i++) {
+                floatingLove.push({
+                    x: centerX + (Math.random() - 0.5) * 200,
+                    y: centerY + (Math.random() - 0.5) * 140,
+                    vx: (Math.random() - 0.5) * 2.5,
+                    vy: -Math.random() * 2.2 - 0.8,
+                    size: Math.random() * 10 + 10,
+                    alpha: 1,
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.03,
+                    symbol: symbols[Math.floor(Math.random() * symbols.length)]
+                });
+            }
+        }
+
+        function drawGoldenPetal(ctx, p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            const flipScale = Math.cos(p.flipPhase);
+            ctx.scale(1, Math.max(0.2, Math.abs(flipScale)));
+
+            ctx.fillStyle = 'rgba(234, 140, 30, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(-p.size, 0);
+            ctx.quadraticCurveTo(0, -p.size * 0.5, p.size, 0);
+            ctx.quadraticCurveTo(0, p.size * 0.5, -p.size, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Luciérnagas
+            for (let f of fireflies) {
+                f.x += f.vx;
+                f.y += f.vy;
+                f.alpha += f.deltaAlpha;
+
+                if (f.alpha > 0.95 || f.alpha < 0.15) f.deltaAlpha *= -1;
+                if (f.y < -10) f.y = canvas.height + 10;
+                if (f.x < -10) f.x = canvas.width + 10;
+                if (f.x > canvas.width + 10) f.x = -10;
+
+                ctx.save();
+                ctx.beginPath();
+                const grad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 3.5);
+                grad.addColorStop(0, `hsla(${f.hue}, 100%, 80%, ${f.alpha})`);
+                grad.addColorStop(1, `hsla(${f.hue}, 100%, 50%, 0)`);
+                ctx.fillStyle = grad;
+                ctx.arc(f.x, f.y, f.r * 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Pétalos suaves
+            for (let p of driftingPetals) {
+                p.swayPhase += 0.015;
+                p.x += p.vx + Math.sin(p.swayPhase) * 0.3;
+                p.y += p.vy + Math.cos(p.swayPhase * 0.6) * 0.15;
+                p.angle += p.vAngle;
+                p.flipPhase += p.vFlip;
+
+                if (p.x > canvas.width + 25) p.x = -25;
+                if (p.y > canvas.height + 25) {
+                    p.y = -20;
+                    p.x = Math.random() * canvas.width;
+                }
+                drawGoldenPetal(ctx, p);
+            }
+
+            // Partículas de afecto
+            for (let i = floatingLove.length - 1; i >= 0; i--) {
+                const p = floatingLove[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rotation += p.vRot;
+                p.alpha -= 0.009;
+
+                if (p.alpha <= 0) {
+                    floatingLove.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.font = `${p.size}px serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.symbol, 0, 0);
+                ctx.restore();
+            }
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        /* ==========================================================
+           8. MODAL DE PERSONALIZACIÓN
+           ========================================================== */
+        function openCustomizeModal(focusSection = 'text') {
+            document.getElementById('inputRecipient').value = bookData.recipient;
+            document.getElementById('inputCoverTitle').value = bookData.coverSubtitle;
+            document.getElementById('inputPage1').value = bookData.pages[0].text;
+            document.getElementById('inputPage2').value = bookData.pages[1].text;
+            document.getElementById('inputPage3').value = bookData.pages[2].text;
+            document.getElementById('inputPage4').value = bookData.pages[3].text;
+            document.getElementById('inputSignature').value = bookData.signature;
+
+            document.getElementById('inputCaption0').value = photoGallery[0].caption;
+            document.getElementById('inputCaption1').value = photoGallery[1].caption;
+            document.getElementById('inputCaption2').value = photoGallery[2].caption;
+            updatePhotoDisplays();
+
+            const modal = document.getElementById('customizeModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (focusSection === 'photos') {
+                const sec = document.getElementById('photoUploadSection');
+                if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function closeCustomizeModal() {
+            const modal = document.getElementById('customizeModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveCustomDedication() {
+            const recipient = document.getElementById('inputRecipient').value.trim();
+            const subtitle = document.getElementById('inputCoverTitle').value.trim();
+            const p1 = document.getElementById('inputPage1').value.trim();
+            const p2 = document.getElementById('inputPage2').value.trim();
+            const p3 = document.getElementById('inputPage3').value.trim();
+            const p4 = document.getElementById('inputPage4').value.trim();
+            const sig = document.getElementById('inputSignature').value.trim();
+
+            const cap0 = document.getElementById('inputCaption0').value.trim();
+            const cap1 = document.getElementById('inputCaption1').value.trim();
+            const cap2 = document.getElementById('inputCaption2').value.trim();
+
+            if (cap0) photoGallery[0].caption = cap0;
+            if (cap1) photoGallery[1].caption = cap1;
+            if (cap2) photoGallery[2].caption = cap2;
+
+            if (recipient) {
+                bookData.recipient = recipient;
+                bookData.coverTitle = recipient;
+            }
+            if (subtitle) bookData.coverSubtitle = subtitle;
+            if (p1) bookData.pages[0].text = p1;
+            if (p2) bookData.pages[1].text = p2;
+            if (p3) bookData.pages[2].text = p3;
+            if (p4) bookData.pages[3].text = p4;
+            if (sig) bookData.signature = sig;
+
+            try {
+                localStorage.setItem('danni_book_photos_v2', JSON.stringify(photoGallery));
+                localStorage.setItem('danni_book_data_v2', JSON.stringify(bookData));
+            } catch (e) {}
+
+            updatePhotoDisplays();
+            closeCustomizeModal();
+
+            if (!isBookOpen) openBook();
+            else {
+                renderPage(currentPageIndex);
+                spawnLoveBurst(20);
+            }
+        }
+
+        window.onload = function() {
+            initPhotosAndStorage();
+            buildSunflowerGarden();
+            setupHeliotropism();
+            renderPage(0);
+            animateCanvas();
+        };
+    </script>
+</body>
+</html>
