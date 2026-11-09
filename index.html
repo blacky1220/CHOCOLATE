@@ -15,6 +15,9 @@
     
     <!-- Tone.js para la cajita de música acústica -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Three.js (Motor 3D WebGL estilo Blender/Hollywood) y GSAP (Coreografía de Cámaras de Cine) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
     <style>
         :root {
@@ -450,9 +453,117 @@
         .sunflower-wrapper:hover {
             filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6));
         }
+
+        /* ==========================================================
+           ESTÉTICA CINEMATOGRÁFICA 3D HOLLYWOOD (ANAMÓRFICO + 3D)
+           ========================================================== */
+        #webglCinemaCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            pointer-events: none;
+            z-index: 12;
+        }
+
+        /* Destello de lente anamórfico Panavision */
+        .anamorphic-flare {
+            position: fixed;
+            top: 17%;
+            left: 50%;
+            width: 92vw;
+            max-width: 1100px;
+            height: 3px;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(251, 191, 36, 0.12) 20%,
+                rgba(254, 243, 199, 0.75) 50%,
+                rgba(251, 191, 36, 0.12) 80%,
+                transparent 100%);
+            box-shadow: 0 0 28px 6px rgba(245, 158, 11, 0.45), 0 0 80px 18px rgba(217, 119, 6, 0.25);
+            pointer-events: none;
+            z-index: 14;
+            mix-blend-mode: screen;
+            opacity: 0.75;
+            transition: opacity 0.8s ease, transform 0.6s ease;
+        }
+
+        /* Barras widescreen de cine (se activan en barridos de cámara) */
+        .cinema-letterbox-bar {
+            position: fixed;
+            left: 0;
+            width: 100%;
+            height: 0px;
+            background: #070308;
+            z-index: 45;
+            pointer-events: none;
+            transition: height 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.85);
+        }
+        .cinema-letterbox-bar.top { top: 0; }
+        .cinema-letterbox-bar.bottom { bottom: 0; }
+        body.cinema-widescreen .cinema-letterbox-bar {
+            height: 34px;
+        }
+        @media (max-width: 768px) {
+            body.cinema-widescreen .cinema-letterbox-bar {
+                height: 20px;
+            }
+        }
+
+        /* Hoja 3D animada al pasar página */
+        .page-turn-sheet {
+            position: absolute;
+            inset: 0;
+            border-radius: 6px 16px 16px 6px;
+            background: linear-gradient(90deg, #cfb284 0%, #fcf6e8 18%, #fffdf9 65%, #efe0c2 100%);
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            pointer-events: none;
+            z-index: 28;
+            opacity: 0;
+            box-shadow: -15px 0 35px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Halo mágico especial para la Nota 4 (Juramento Inquebrantable) */
+        .book-wrapper.vow-glow-active {
+            filter: drop-shadow(0 0 32px rgba(251, 191, 36, 0.45)) drop-shadow(0 0 65px rgba(147, 197, 253, 0.28));
+        }
+
+        /* Indicador de escena cinematográfica */
+        .cinema-scene-toast {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%) translateY(16px);
+            background: rgba(15, 6, 14, 0.72);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fde68a;
+            padding: 5px 16px;
+            border-radius: 999px;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            z-index: 48;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .cinema-scene-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body class="sunset-sky w-screen h-screen relative flex flex-col justify-between items-center overflow-hidden">
+
+    <!-- Barras Widescreen de Cine Hollywood -->
+    <div id="cinemaBarTop" class="cinema-letterbox-bar top"></div>
+    <div id="cinemaBarBottom" class="cinema-letterbox-bar bottom"></div>
+    <div id="cinemaSceneToast" class="cinema-scene-toast font-serif-title">🎬 Escena I • Atardecer Dorado</div>
 
     <!-- Capa de grano fotográfico analógico (elimina la apariencia sintética de IA) -->
     <svg class="pointer-events-none fixed inset-0 w-full h-full opacity-[0.038] mix-blend-overlay z-50">
@@ -461,6 +572,11 @@
         </filter>
         <rect width="100%" height="100%" filter="url(#filmGrain)"/>
     </svg>
+
+    <!-- Motor 3D WebGL (Campo 3D de girasoles, cámara de cine, Juramento Inquebrantable) -->
+    <canvas id="webglCinemaCanvas"></canvas>
+    <!-- Destello anamórfico de lente de cine -->
+    <div id="anamorphicFlare" class="anamorphic-flare"></div>
 
     <!-- Lienzo de ambiente para luciérnagas y pétalos en la brisa -->
     <canvas id="ambientCanvas" class="absolute inset-0 pointer-events-none z-20"></canvas>
@@ -472,12 +588,18 @@
             <span id="recipientBadge" class="font-medium">Para Danni</span>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
             <!-- Reproductor de "Te Estoy Correteando - Latin Mafia" -->
             <audio id="latinMafiaAudio" src="https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/12/39/23/123923ad-4698-50ca-fa17-e511a06c75f2/mzaf_8412193140445378375.plus.aac.p.m4a" loop preload="auto" crossorigin="anonymous"></audio>
-            <button id="musicBtn" onclick="toggleMusic()" class="flex items-center gap-2 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md text-amber-100/90 px-3.5 py-1.5 rounded-full border border-amber-300/30 text-xs transition shadow-sm" title="Escuchar Te Estoy Correteando - Latin Mafia">
+            <button id="musicBtn" onclick="toggleMusic()" class="flex items-center gap-2 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md text-amber-100/90 px-3 sm:px-3.5 py-1.5 rounded-full border border-amber-300/30 text-xs transition shadow-sm" title="Escuchar Te Estoy Correteando - Latin Mafia">
                 <span id="musicIcon" class="text-xs">♪</span>
                 <span id="musicLabel" class="font-clean text-[11px] tracking-wide">Te Estoy Correteando</span>
+            </button>
+
+            <!-- Botón de Toma de Cine 3D Hollywood -->
+            <button id="cinemaShotBtn" onclick="triggerHollywoodCameraSweep()" class="flex items-center gap-1.5 bg-amber-950/70 hover:bg-amber-900/85 backdrop-blur-md text-amber-200 px-2.5 sm:px-3 py-1.5 rounded-full border border-amber-400/40 text-xs transition shadow-sm" title="Activar barrido de cámara 3D estilo Hollywood">
+                <span>🎬</span>
+                <span class="hidden sm:inline font-clean text-[11px] tracking-wide">Toma 3D</span>
             </button>
 
             <!-- Lluvia suave de pétalos -->
@@ -622,6 +744,8 @@
 
                 <!-- PÁGINA DERECHA: TEXTO ESCRITO A MANO / DEDICATORIA -->
                 <div class="book-right-page">
+                    <!-- Hoja 3D animada para el efecto físico de cambio de página -->
+                    <div id="pageTurnSheet" class="page-turn-sheet"></div>
                     <!-- Encabezado de página -->
                     <div class="flex justify-between items-center border-b border-stone-800/15 pb-1.5">
                         <span id="chapterNumber" class="font-serif-book italic text-xs text-stone-600 font-medium">
@@ -1126,6 +1250,9 @@
                 toggleMusic();
             }
             spawnLoveBurst(14);
+            if (typeof playHollywoodBookOpenShot === 'function') {
+                playHollywoodBookOpenShot();
+            }
 
             setTimeout(() => {
                 renderPage(currentPageIndex);
@@ -1136,7 +1263,7 @@
             if (event) event.stopPropagation();
             isBookOpen = false;
             const wrapper = document.getElementById('bookWrapper');
-            wrapper.classList.remove('is-open', 'mobile-show-album');
+            wrapper.classList.remove('is-open', 'mobile-show-album', 'vow-glow-active');
             wrapper.classList.add('is-closed');
 
             document.getElementById('toggleBookIcon').textContent = '📖';
@@ -1144,6 +1271,9 @@
 
             if (typewriterTimer) clearInterval(typewriterTimer);
             playPageTurnSound();
+            if (typeof playHollywoodBookCloseShot === 'function') {
+                playHollywoodBookCloseShot();
+            }
         }
 
         function changePage(direction) {
@@ -1153,7 +1283,14 @@
             if (nextIndex >= bookData.pages.length) {
                 spawnLoveBurst(30);
                 playSoftChime();
+                if (typeof triggerHollywoodCameraSweep === 'function') {
+                    triggerHollywoodCameraSweep();
+                }
                 return;
+            }
+
+            if (typeof animate3DPageSheetFlip === 'function') {
+                animate3DPageSheetFlip(direction);
             }
 
             currentPageIndex = nextIndex;
@@ -1231,6 +1368,10 @@
 
             let charIndex = 0;
             const fullText = page.text;
+
+            if (typeof transitionHollywoodScene === 'function' && isBookOpen) {
+                transitionHollywoodScene(index);
+            }
 
             typewriterTimer = setInterval(() => {
                 if (charIndex < fullText.length) {
@@ -1713,12 +1854,667 @@
             }, { passive: true });
         }
 
+        /* ==========================================================
+           9. MOTOR 3D CINEMATOGRÁFICO HOLLYWOOD (THREE.JS + GSAP)
+              - Campo 3D real de girasoles con profundidad e iluminación
+              - Coreografía de cámara de cine (Crane, Dolly-In, Órbita 360°)
+              - VFX Especial en Nota 4: "Juramento Inquebrantable" (Hélice
+                dorada 3D + destellos Patronus azul plata "Always")
+           ========================================================== */
+        let danniCinema3D = {
+            scene: null,
+            camera: null,
+            renderer: null,
+            lookTarget: null,
+            sunLight: null,
+            ambientLight: null,
+            rimLight: null,
+            sunGroup: null,
+            sunflowers3D: [],
+            goldenDust: null,
+            vowGroup: null,
+            vowRibbonA: null,
+            vowRibbonB: null,
+            patronusParticles: null,
+            vowIntensity: { value: 0 },
+            mouseParallax: { x: 0, y: 0, targetX: 0, targetY: 0 },
+            clock: null,
+            isSweepActive: false,
+            toastTimeout: null
+        };
+
+        function showCinemaSceneToast(label, durationMs = 2800) {
+            const toast = document.getElementById('cinemaSceneToast');
+            if (!toast) return;
+            toast.textContent = label;
+            toast.classList.add('show');
+            if (danniCinema3D.toastTimeout) clearTimeout(danniCinema3D.toastTimeout);
+            danniCinema3D.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, durationMs);
+        }
+
+        function animate3DPageSheetFlip(direction) {
+            const sheet = document.getElementById('pageTurnSheet');
+            const book = document.getElementById('bookWrapper');
+            if (!sheet || typeof gsap === 'undefined') return;
+
+            gsap.killTweensOf(sheet);
+            if (direction > 0) {
+                gsap.fromTo(sheet,
+                    { opacity: 0.95, rotationY: 0, transformOrigin: 'left center' },
+                    {
+                        rotationY: -172,
+                        opacity: 0,
+                        duration: 0.78,
+                        ease: 'power2.inOut',
+                        onComplete: () => gsap.set(sheet, { rotationY: 0, opacity: 0 })
+                    }
+                );
+            } else {
+                gsap.fromTo(sheet,
+                    { opacity: 0.92, rotationY: -170, transformOrigin: 'left center' },
+                    {
+                        rotationY: 0,
+                        opacity: 0,
+                        duration: 0.72,
+                        ease: 'power2.out'
+                    }
+                );
+            }
+
+            if (book) {
+                gsap.fromTo(book,
+                    { rotationZ: direction > 0 ? -0.8 : 0.8 },
+                    { rotationZ: 0, duration: 0.65, ease: 'elastic.out(1, 0.5)' }
+                );
+            }
+        }
+
+        function create3DSunflowerMesh(scaleMultiplier = 1) {
+            const group = new THREE.Group();
+
+            // Tallo curvado orgánico en 3D
+            const stemCurve = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0.05, 0.9, 0.04),
+                new THREE.Vector3(-0.03, 1.75, 0.08),
+                new THREE.Vector3(0, 2.45, 0.14)
+            ]);
+            const stemGeo = new THREE.TubeGeometry(stemCurve, 10, 0.055, 7, false);
+            const stemMat = new THREE.MeshStandardMaterial({
+                color: 0x166534,
+                roughness: 0.75,
+                metalness: 0.05
+            });
+            const stemMesh = new THREE.Mesh(stemGeo, stemMat);
+            group.add(stemMesh);
+
+            // Hojas 3D laterales
+            const leafGeo = new THREE.ConeGeometry(0.28, 0.65, 5);
+            leafGeo.scale(1, 0.25, 0.65);
+            const leafLeft = new THREE.Mesh(leafGeo, stemMat);
+            leafLeft.position.set(-0.26, 1.25, 0.08);
+            leafLeft.rotation.set(0.2, 0.3, 1.15);
+            group.add(leafLeft);
+
+            const leafRight = new THREE.Mesh(leafGeo, stemMat);
+            leafRight.position.set(0.26, 1.55, 0.08);
+            leafRight.rotation.set(0.2, -0.3, -1.15);
+            group.add(leafRight);
+
+            // Cabeza floral 3D que mira hacia el sol / cámara
+            const headGroup = new THREE.Group();
+            headGroup.position.set(0, 2.48, 0.18);
+            headGroup.rotation.x = 0.18;
+
+            // Centro de semillas en relieve 3D
+            const centerGeo = new THREE.CylinderGeometry(0.36, 0.32, 0.12, 20);
+            centerGeo.rotateX(Math.PI / 2);
+            const centerMat = new THREE.MeshStandardMaterial({
+                color: 0x2b130b,
+                roughness: 0.85,
+                emissive: 0x1a0904
+            });
+            const centerMesh = new THREE.Mesh(centerGeo, centerMat);
+            headGroup.add(centerMesh);
+
+            // Anillo de polen dorado
+            const ringGeo = new THREE.TorusGeometry(0.32, 0.045, 8, 24);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: 0xd97706,
+                emissive: 0x92400e,
+                emissiveIntensity: 0.35,
+                roughness: 0.5
+            });
+            const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+            ringMesh.position.z = 0.04;
+            headGroup.add(ringMesh);
+
+            // Corona doble de pétalos 3D
+            const petalGeo = new THREE.ConeGeometry(0.11, 0.56, 5);
+            petalGeo.scale(1, 1, 0.22);
+            petalGeo.translate(0, 0.5, 0);
+
+            const petalMatFront = new THREE.MeshStandardMaterial({
+                color: 0xfbbf24,
+                emissive: 0xd97706,
+                emissiveIntensity: 0.28,
+                roughness: 0.42
+            });
+            const petalMatBack = new THREE.MeshStandardMaterial({
+                color: 0xf59e0b,
+                emissive: 0xb45309,
+                emissiveIntensity: 0.22,
+                roughness: 0.5
+            });
+
+            const petalCount = 18;
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (i / petalCount) * Math.PI * 2;
+                const petal = new THREE.Mesh(petalGeo, petalMatFront);
+                petal.rotation.z = angle;
+                petal.rotation.x = -0.14;
+                headGroup.add(petal);
+
+                const backPetal = new THREE.Mesh(petalGeo, petalMatBack);
+                backPetal.rotation.z = angle + (Math.PI / petalCount);
+                backPetal.rotation.x = 0.08;
+                backPetal.position.z = -0.03;
+                backPetal.scale.set(0.92, 0.95, 1);
+                headGroup.add(backPetal);
+            }
+
+            group.add(headGroup);
+            group.scale.setScalar(scaleMultiplier);
+            return { group, headGroup };
+        }
+
+        function createUnbreakableVowVFX(scene) {
+            const vowGroup = new THREE.Group();
+            vowGroup.position.set(0, 1.5, 1.8);
+            scene.add(vowGroup);
+
+            // Dos lazos helicoidales 3D de fuego dorado ("Juramento Inquebrantable")
+            const buildHelixCurve = (phaseOffset) => {
+                const pts = [];
+                const turns = 3.5;
+                const steps = 90;
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const angle = t * Math.PI * 2 * turns + phaseOffset;
+                    const radius = 2.6 + Math.sin(t * Math.PI) * 0.85;
+                    const x = Math.cos(angle) * radius;
+                    const y = (t - 0.5) * 4.6;
+                    const z = Math.sin(angle) * (radius * 0.72);
+                    pts.push(new THREE.Vector3(x, y, z));
+                }
+                return new THREE.CatmullRomCurve3(pts);
+            };
+
+            const geoA = new THREE.TubeGeometry(buildHelixCurve(0), 100, 0.045, 8, false);
+            const matA = new THREE.MeshBasicMaterial({
+                color: 0xfde047,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending
+            });
+            const ribbonA = new THREE.Mesh(geoA, matA);
+            vowGroup.add(ribbonA);
+
+            const geoB = new THREE.TubeGeometry(buildHelixCurve(Math.PI), 100, 0.038, 8, false);
+            const matB = new THREE.MeshBasicMaterial({
+                color: 0xf59e0b,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending
+            });
+            const ribbonB = new THREE.Mesh(geoB, matB);
+            vowGroup.add(ribbonB);
+
+            // Destellos plateados-azulados estilo Patronus ("Always" - Snape & Lily)
+            const count = 180;
+            const posArray = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = 1.6 + Math.random() * 3.2;
+                posArray[i * 3] = Math.cos(angle) * r;
+                posArray[i * 3 + 1] = (Math.random() - 0.5) * 5.2;
+                posArray[i * 3 + 2] = Math.sin(angle) * r;
+            }
+            const partGeo = new THREE.BufferGeometry();
+            partGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const partMat = new THREE.PointsMaterial({
+                color: 0xbae6fd,
+                size: 0.14,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending
+            });
+            const patronusParticles = new THREE.Points(partGeo, partMat);
+            vowGroup.add(patronusParticles);
+
+            danniCinema3D.vowGroup = vowGroup;
+            danniCinema3D.vowRibbonA = ribbonA;
+            danniCinema3D.vowRibbonB = ribbonB;
+            danniCinema3D.patronusParticles = patronusParticles;
+        }
+
+        function initHollywood3DScene() {
+            if (typeof THREE === 'undefined') return;
+            const webglCanvas = document.getElementById('webglCinemaCanvas');
+            if (!webglCanvas) return;
+
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x2a0f1d, 0.032);
+
+            const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 160);
+            // Posición inicial elevada para hacer un Crane + Dolly-In de película al entrar
+            camera.position.set(0, 6.2, 22);
+            const lookTarget = new THREE.Vector3(0, 1.35, 0);
+            camera.lookAt(lookTarget);
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas: webglCanvas,
+                alpha: true,
+                antialias: true,
+                powerPreference: 'high-performance'
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+            // Iluminación cinematográfica Golden Hour
+            const ambientLight = new THREE.AmbientLight(0xffedd5, 0.72);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfbbf24, 1.85);
+            sunLight.position.set(0, 9, -18);
+            scene.add(sunLight);
+
+            const rimLight = new THREE.PointLight(0xf97316, 2.1, 35);
+            rimLight.position.set(0, 4.2, 5.5);
+            scene.add(rimLight);
+
+            // Sol volumétrico 3D en el horizonte
+            const sunGroup = new THREE.Group();
+            sunGroup.position.set(0, 5.4, -26);
+            const sunCoreGeo = new THREE.SphereGeometry(3.4, 32, 32);
+            const sunCoreMat = new THREE.MeshBasicMaterial({
+                color: 0xfef3c7,
+                transparent: true,
+                opacity: 0.92
+            });
+            sunGroup.add(new THREE.Mesh(sunCoreGeo, sunCoreMat));
+
+            const sunHaloGeo = new THREE.SphereGeometry(5.6, 32, 32);
+            const sunHaloMat = new THREE.MeshBasicMaterial({
+                color: 0xf59e0b,
+                transparent: true,
+                opacity: 0.28,
+                blending: THREE.AdditiveBlending
+            });
+            sunGroup.add(new THREE.Mesh(sunHaloGeo, sunHaloMat));
+            scene.add(sunGroup);
+
+            // Terreno ondulado 3D
+            const groundGeo = new THREE.PlaneGeometry(90, 65, 48, 32);
+            groundGeo.rotateX(-Math.PI / 2);
+            const posAttr = groundGeo.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                const vx = posAttr.getX(i);
+                const vz = posAttr.getZ(i);
+                const wave = Math.sin(vx * 0.14) * 0.55 + Math.cos(vz * 0.18) * 0.45;
+                // Valle suave en el centro para enmarcar el libro
+                const valley = Math.min(1.4, (vx * vx) * 0.012);
+                posAttr.setY(i, wave + valley - 1.55);
+            }
+            groundGeo.computeVertexNormals();
+            const groundMat = new THREE.MeshStandardMaterial({
+                color: 0x1b0912,
+                roughness: 0.92,
+                metalness: 0.05
+            });
+            const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+            scene.add(groundMesh);
+
+            // Campo de 58 girasoles 3D distribuidos con profundidad real
+            const sunflowers3D = [];
+            const totalFlowers = window.innerWidth < 768 ? 38 : 56;
+            for (let i = 0; i < totalFlowers; i++) {
+                // Evitar bloquear exactamente el centro inmediato frente a la cámara
+                let x = (Math.random() - 0.5) * 28;
+                const z = -18 + Math.random() * 23;
+                if (z > 1.5 && Math.abs(x) < 3.6) {
+                    x += (x >= 0 ? 3.8 : -3.8);
+                }
+
+                const scale = 0.42 + Math.random() * 0.42;
+                const { group, headGroup } = create3DSunflowerMesh(scale);
+
+                const groundY = Math.sin(x * 0.14) * 0.55 + Math.cos(z * 0.18) * 0.45 + Math.min(1.4, (x * x) * 0.012) - 1.55;
+                group.position.set(x, groundY - 0.1, z);
+                group.rotation.y = (Math.random() - 0.5) * 0.65;
+
+                scene.add(group);
+                sunflowers3D.push({
+                    group,
+                    headGroup,
+                    baseRotZ: (Math.random() - 0.5) * 0.08,
+                    swaySpeed: 0.9 + Math.random() * 0.9,
+                    swayPhase: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Partículas 3D de polvo de oro y bokeh flotante en el espacio 3D
+            const dustCount = 240;
+            const dustPositions = new Float32Array(dustCount * 3);
+            for (let i = 0; i < dustCount; i++) {
+                dustPositions[i * 3] = (Math.random() - 0.5) * 30;
+                dustPositions[i * 3 + 1] = Math.random() * 10 - 1;
+                dustPositions[i * 3 + 2] = -16 + Math.random() * 24;
+            }
+            const dustGeo = new THREE.BufferGeometry();
+            dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+            const dustMat = new THREE.PointsMaterial({
+                color: 0xfde68a,
+                size: 0.13,
+                transparent: true,
+                opacity: 0.78,
+                blending: THREE.AdditiveBlending
+            });
+            const goldenDust = new THREE.Points(dustGeo, dustMat);
+            scene.add(goldenDust);
+
+            // Inicializar VFX del Juramento Inquebrantable (Nota 4)
+            createUnbreakableVowVFX(scene);
+
+            Object.assign(danniCinema3D, {
+                scene,
+                camera,
+                renderer,
+                lookTarget,
+                sunLight,
+                ambientLight,
+                rimLight,
+                sunGroup,
+                sunflowers3D,
+                goldenDust,
+                clock: new THREE.Clock()
+            });
+
+            // Movimiento de cámara de introducción estilo Hollywood (Crane Down + Dolly In)
+            if (typeof gsap !== 'undefined') {
+                document.body.classList.add('cinema-widescreen');
+                showCinemaSceneToast('🎬 Para Danni • Apertura en 3D', 3200);
+                gsap.to(camera.position, {
+                    x: 0,
+                    y: 1.85,
+                    z: 10.6,
+                    duration: 3.4,
+                    ease: 'power3.out',
+                    onComplete: () => {
+                        document.body.classList.remove('cinema-widescreen');
+                    }
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                if (!danniCinema3D.camera || !danniCinema3D.renderer) return;
+                danniCinema3D.camera.aspect = window.innerWidth / window.innerHeight;
+                danniCinema3D.camera.updateProjectionMatrix();
+                danniCinema3D.renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                danniCinema3D.mouseParallax.targetX = ((e.clientX / window.innerWidth) - 0.5) * 1.1;
+                danniCinema3D.mouseParallax.targetY = ((e.clientY / window.innerHeight) - 0.5) * 0.55;
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches && e.touches[0]) {
+                    danniCinema3D.mouseParallax.targetX = ((e.touches[0].clientX / window.innerWidth) - 0.5) * 0.9;
+                    danniCinema3D.mouseParallax.targetY = ((e.touches[0].clientY / window.innerHeight) - 0.5) * 0.45;
+                }
+            }, { passive: true });
+
+            animateHollywood3DLoop();
+        }
+
+        function animateHollywood3DLoop() {
+            requestAnimationFrame(animateHollywood3DLoop);
+            if (!danniCinema3D.renderer || !danniCinema3D.scene || !danniCinema3D.camera) return;
+
+            const elapsed = danniCinema3D.clock.getElapsedTime();
+
+            // Suavizado de paralaje interactivo en 3D
+            danniCinema3D.mouseParallax.x += (danniCinema3D.mouseParallax.targetX - danniCinema3D.mouseParallax.x) * 0.05;
+            danniCinema3D.mouseParallax.y += (danniCinema3D.mouseParallax.targetY - danniCinema3D.mouseParallax.y) * 0.05;
+
+            // Brisa orgánica en los 56 girasoles 3D
+            for (let i = 0; i < danniCinema3D.sunflowers3D.length; i++) {
+                const sf = danniCinema3D.sunflowers3D[i];
+                sf.group.rotation.z = sf.baseRotZ + Math.sin(elapsed * sf.swaySpeed + sf.swayPhase) * 0.065;
+                sf.headGroup.rotation.y = danniCinema3D.mouseParallax.x * 0.35 + Math.cos(elapsed * 0.7 + sf.swayPhase) * 0.05;
+            }
+
+            // Polvo dorado ascendente en 3D
+            if (danniCinema3D.goldenDust) {
+                danniCinema3D.goldenDust.rotation.y = elapsed * 0.03;
+                danniCinema3D.goldenDust.position.y = Math.sin(elapsed * 0.5) * 0.25;
+            }
+
+            // Animación del Juramento Inquebrantable (Nota 4: Snape & Lily)
+            if (danniCinema3D.vowGroup) {
+                danniCinema3D.vowGroup.rotation.y = elapsed * 0.55;
+                danniCinema3D.vowGroup.rotation.z = Math.sin(elapsed * 0.4) * 0.12;
+                const vowAlpha = danniCinema3D.vowIntensity.value;
+                if (danniCinema3D.vowRibbonA) danniCinema3D.vowRibbonA.material.opacity = vowAlpha * 0.82;
+                if (danniCinema3D.vowRibbonB) danniCinema3D.vowRibbonB.material.opacity = vowAlpha * 0.68;
+                if (danniCinema3D.patronusParticles) {
+                    danniCinema3D.patronusParticles.material.opacity = vowAlpha * 0.9;
+                    danniCinema3D.patronusParticles.rotation.y = -elapsed * 0.35;
+                }
+            }
+
+            // Mirada de cámara cinematográfica con micro-movimiento respiración (Handheld Cinema Rig)
+            const targetX = danniCinema3D.lookTarget.x + danniCinema3D.mouseParallax.x * 0.65;
+            const targetY = danniCinema3D.lookTarget.y - danniCinema3D.mouseParallax.y * 0.4 + Math.sin(elapsed * 0.9) * 0.04;
+            danniCinema3D.camera.lookAt(targetX, targetY, danniCinema3D.lookTarget.z);
+
+            danniCinema3D.renderer.render(danniCinema3D.scene, danniCinema3D.camera);
+        }
+
+        // Coreografía de cámara al abrir el cuaderno
+        function playHollywoodBookOpenShot() {
+            if (!danniCinema3D.camera || typeof gsap === 'undefined') return;
+            document.body.classList.add('cinema-widescreen');
+            showCinemaSceneToast('🎬 Escena I • Hola, Danni', 2600);
+
+            gsap.to(danniCinema3D.camera.position, {
+                x: -0.45,
+                y: 1.55,
+                z: 8.4,
+                duration: 1.8,
+                ease: 'power3.inOut',
+                onComplete: () => {
+                    document.body.classList.remove('cinema-widescreen');
+                }
+            });
+        }
+
+        // Coreografía de cámara al cerrar el cuaderno
+        function playHollywoodBookCloseShot() {
+            if (!danniCinema3D.camera || typeof gsap === 'undefined') return;
+            gsap.to(danniCinema3D.vowIntensity, { value: 0, duration: 0.8 });
+            gsap.to(danniCinema3D.camera.position, {
+                x: 0,
+                y: 1.85,
+                z: 10.6,
+                duration: 1.5,
+                ease: 'power2.out'
+            });
+        }
+
+        // Coreografía de cámara e iluminación por cada nota de Danni
+        function transitionHollywoodScene(pageIndex) {
+            if (!danniCinema3D.camera || typeof gsap === 'undefined') return;
+            const book = document.getElementById('bookWrapper');
+            const flare = document.getElementById('anamorphicFlare');
+
+            const shots = [
+                // Nota 1: Hola, Danni (Atardecer cálido Golden Hour)
+                {
+                    cam: { x: -0.5, y: 1.55, z: 8.5 },
+                    look: { x: 0, y: 1.35, z: 0 },
+                    sunColor: 0xfbbf24,
+                    rimColor: 0xf97316,
+                    vow: 0,
+                    toast: ' Un Rincón Para Danni'
+                },
+                // Nota 2: Qué pienso de ti (Órbita suave en oro rosado)
+                {
+                    cam: { x: 1.65, y: 1.38, z: 8.1 },
+                    look: { x: 0.15, y: 1.3, z: 0 },
+                    sunColor: 0xfb7185,
+                    rimColor: 0xfbbf24,
+                    vow: 0,
+                    toast: ' Tu Luz y Tu Paz'
+                },
+                // Nota 3: No estás sola (Refugio crepuscular cálido y cercano)
+                {
+                    cam: { x: -1.45, y: 1.45, z: 7.75 },
+                    look: { x: -0.1, y: 1.35, z: 0 },
+                    sunColor: 0xf59e0b,
+                    rimColor: 0xc084fc,
+                    vow: 0,
+                    toast: ' Tu Lugar Seguro'
+                },
+                // Nota 4: Por ti haría el Juramento Inquebrantable (Snape & Lily - VFX Hélice Dorada + Patronus)
+                {
+                    cam: { x: 0, y: 1.95, z: 7.2 },
+                    look: { x: 0, y: 1.42, z: 0 },
+                    sunColor: 0x38bdf8,
+                    rimColor: 0xfde047,
+                    vow: 1,
+                    toast: ' El Juramento Inquebrantable («Always»)'
+                },
+                // Nota 5: Quédate con esto (Gran Final Dorado en el Campo 3D)
+                {
+                    cam: { x: 0.75, y: 1.68, z: 8.0 },
+                    look: { x: 0, y: 1.38, z: 0 },
+                    sunColor: 0xfef08a,
+                    rimColor: 0xf97316,
+                    vow: 0.25,
+                    toast: ' Quédate Con Esto, Danni'
+                }
+            ];
+
+            const cfg = shots[pageIndex] || shots[0];
+            showCinemaSceneToast(cfg.toast, 2800);
+
+            if (book) {
+                if (pageIndex === 3) book.classList.add('vow-glow-active');
+                else book.classList.remove('vow-glow-active');
+            }
+
+            if (flare) {
+                flare.style.opacity = pageIndex === 3 ? '1' : '0.72';
+                flare.style.transform = `translate(-50%, -50%) scaleX(${pageIndex === 3 ? 1.18 : 1})`;
+            }
+
+            gsap.to(danniCinema3D.camera.position, {
+                x: cfg.cam.x,
+                y: cfg.cam.y,
+                z: cfg.cam.z,
+                duration: 1.65,
+                ease: 'power3.inOut'
+            });
+
+            gsap.to(danniCinema3D.lookTarget, {
+                x: cfg.look.x,
+                y: cfg.look.y,
+                z: cfg.look.z,
+                duration: 1.65,
+                ease: 'power2.out'
+            });
+
+            gsap.to(danniCinema3D.vowIntensity, {
+                value: cfg.vow,
+                duration: 1.4,
+                ease: 'power2.inOut'
+            });
+
+            if (danniCinema3D.sunLight && danniCinema3D.rimLight) {
+                const targetSun = new THREE.Color(cfg.sunColor);
+                const targetRim = new THREE.Color(cfg.rimColor);
+                gsap.to(danniCinema3D.sunLight.color, {
+                    r: targetSun.r, g: targetSun.g, b: targetSun.b, duration: 1.4
+                });
+                gsap.to(danniCinema3D.rimLight.color, {
+                    r: targetRim.r, g: targetRim.g, b: targetRim.b, duration: 1.4
+                });
+            }
+
+            if (pageIndex === 3 || pageIndex === 4) {
+                spawnLoveBurst(18);
+            }
+        }
+
+        // Botón "🎬 Toma 3D": Barrido dramático estilo Hollywood por el campo de girasoles
+        function triggerHollywoodCameraSweep() {
+            if (!danniCinema3D.camera || typeof gsap === 'undefined' || danniCinema3D.isSweepActive) return;
+            danniCinema3D.isSweepActive = true;
+
+            document.body.classList.add('cinema-widescreen');
+            showCinemaSceneToast('🎬 Toma de Cine 3D • Campo de Girasoles de Danni', 4500);
+            spawnLoveBurst(26);
+
+            const prevVow = danniCinema3D.vowIntensity.value;
+            const tl = gsap.timeline({
+                onComplete: () => {
+                    document.body.classList.remove('cinema-widescreen');
+                    danniCinema3D.isSweepActive = false;
+                    if (isBookOpen) {
+                        transitionHollywoodScene(currentPageIndex);
+                    }
+                }
+            });
+
+            // Activar destello mágico durante el barrido
+            tl.to(danniCinema3D.vowIntensity, { value: 1, duration: 0.9 }, 0);
+
+            // Barrido panorámico en arco por el jardín 3D
+            tl.to(danniCinema3D.camera.position, {
+                x: -5.2,
+                y: 2.8,
+                z: 12.5,
+                duration: 1.5,
+                ease: 'power2.inOut'
+            }, 0)
+            .to(danniCinema3D.camera.position, {
+                x: 5.2,
+                y: 3.1,
+                z: 11.8,
+                duration: 1.8,
+                ease: 'sine.inOut'
+            })
+            .to(danniCinema3D.camera.position, {
+                x: isBookOpen ? -0.4 : 0,
+                y: isBookOpen ? 1.55 : 1.85,
+                z: isBookOpen ? 8.3 : 10.6,
+                duration: 1.5,
+                ease: 'power3.out'
+            })
+            .to(danniCinema3D.vowIntensity, { value: prevVow, duration: 0.8 }, '-=0.8');
+        }
+
         window.onload = function() {
             initPhotosAndStorage();
             initMusicPlayer();
             buildSunflowerGarden();
             setupHeliotropism();
             setupMobileTouchGestures();
+            initHollywood3DScene();
             renderPage(0);
             animateCanvas();
         };
